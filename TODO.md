@@ -7,9 +7,9 @@
 - [x] Trace `company_id` usage through context building.
 - [x] Identify ingestion gap: `AppointmentFetcher` and `AdmissionFetcher` ignore `company_id`.
 
-## Planned code fixes
-- [ ] Update `services/patient_context_service.py` to pass `company_id` into appointment/admission fetchers.
-- [ ] Update `ingestion/appointment_fetcher.py` to accept `company_id` and include it in `/appointments` query.
-- [ ] Update `ingestion/admission_fetcher.py` to accept `company_id` and include it in `/admissions` query.
+## Planned code fixes (after confirming company is only required for patient ingestion)
+- [ ] Add support for `companyId` alias in `api/summary_routes.py` (query param compatibility).
+- [ ] Add brief debug logging in the route to confirm resolved `company_id`.
 - [ ] Run `pytest` and ensure tests pass.
+
 

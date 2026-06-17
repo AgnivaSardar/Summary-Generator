@@ -10,6 +10,8 @@ class RangeParser:
             max_value = float(match.group(2))
             return {
                 "type": "range",
+                "min": min_value,
+                "max": max_value,
                 "value": (min_value, max_value)
             }
         else:

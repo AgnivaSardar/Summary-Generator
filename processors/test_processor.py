@@ -32,7 +32,21 @@ class TestProcessor:
 
             normalized = (self.normalizer.normalize(test.testName))
 
-            grouped[normalized["canonical_name"]].append(test)
+            # normalized is expected to be a dict from TestNameNormalizer;
+            # guard against unexpected shapes to avoid runtime crashes.
+            if isinstance(normalized, dict):
+                canonical_name = normalized.get("canonical_name")
+                category = normalized.get("category")
+            else:
+                canonical_name = None
+                category = None
+
+            if not canonical_name:
+                # fallback: use the raw test name as canonical key
+                canonical_name = str(test.testName)
+
+            grouped[canonical_name].append(test)
+
 
         for (test_name,records) in grouped.items():
 
@@ -47,26 +61,52 @@ class TestProcessor:
 
             abnormality = (AbnormalityAnalyzer.analyze(value, parsed_range["min"], parsed_range["max"]))
 
-            severity = (self.severity.analyze_range_based(value, parsed_range["min"], parsed_range["max"]))
+            severity = (
+                self.severity
+                .analyze_range_based(
+                    value,
+                    parsed_range["min"],
+                    parsed_range["max"]
+                )
+            )
 
-            priority = (PriorityAnalyzer.calculate_score(severity, normalized["category"]))
+            # PriorityAnalyzer expects severity *level* and a category string.
+            # SeverityAnalyzer returns a string level (e.g. "LOW", "NORMAL").
+            severity_level = severity if isinstance(severity, str) else (
+                getattr(severity, "get", lambda *_: None)("level")
+                or getattr(severity, "get", lambda *_: None)("severity")
+                or getattr(severity, "get", lambda *_: None)("type")
+                or severity
+            )
+
+
+            # Derive category from the grouped key where possible.
+            # `canonical_name` is not necessarily the same as `category`, so we fall back safely.
+            category = None
+            if isinstance(test_name, str) and test_name:
+                category = test_name
+
+            priority = PriorityAnalyzer.calculate_score(
+                str(severity_level).upper(),
+                str(category).upper() if category else ""
+            )
 
             facts.append(
 
                 ClinicalFact(
 
-                    fact_id=f"TEST_{test_name}",
+                    id=f"TEST_{test_name}",
 
                     category=
-                    normalized["category"],
+                    str(category) if category is not None else "",
 
                     fact=
                     f"{test_name} "
                     f"{abnormality}",
 
-                    severity = severity,
+                    severity=severity,
 
-                    priority_score = priority,
+                    priority_score=priority,
 
                     evidence=[
                         f"Latest value "

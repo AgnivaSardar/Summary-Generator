@@ -81,64 +81,110 @@ class PatientContextService:
             ).fetch(patient_id)
         )
 
+        # Debug: confirm ingestion returned facts for this patient
+        print("[DEBUG] Ingestion sizes:")
+        print("  tests:", len(tests))
+        print("  appointments:", len(appointments))
+        print("  admissions:", len(admissions))
+
+        # Print a single sample to verify expected field names
+        if tests:
+            print("  test sample:", tests[0].__dict__)
+        if appointments:
+            print("  appointment sample:", appointments[0].__dict__)
+        if admissions:
+            print("  admission sample:", admissions[0].__dict__)
+
+
         # --------------------
         # Process Data
         # --------------------
 
         facts = []
 
-        test_result = (
-            TestProcessor()
-            .process(tests)
-        )
+        try:
 
-        facts.extend(
-            test_result.facts
-        )
-
-        appointment_result = (
-            AppointmentProcessor()
-            .process(appointments)
-        )
-
-        facts.extend(
-            appointment_result.facts
-        )
-
-        admission_result = (
-            AdmissionProcessor()
-            .process(admissions)
-        )
-
-        facts.extend(
-            admission_result.facts
-        )
-
-        timeline_result = (
-            TimelineProcessor()
-            .process(
-                appointments,
-                admissions,
-                tests
+            test_result = (
+                TestProcessor()
+                .process(tests)
             )
-        )
 
-        facts.extend(
-            timeline_result.facts
-        )
+            facts.extend(
+                test_result.facts
+            )
 
-        risk_result = (
-            RiskProcessor()
-            .process(facts)
-        )
+        except Exception as e:
+            print("[ERROR] TestProcessor failed:", repr(e))
+            raise
 
-        facts.extend(
-            risk_result.facts
-        )
+        try:
+
+            appointment_result = (
+                AppointmentProcessor()
+                .process(appointments)
+            )
+
+            facts.extend(
+                appointment_result.facts
+            )
+
+        except Exception as e:
+            print("[ERROR] AppointmentProcessor failed:", repr(e))
+            raise
+
+        try:
+
+            admission_result = (
+                AdmissionProcessor()
+                .process(admissions)
+            )
+
+            facts.extend(
+                admission_result.facts
+            )
+
+        except Exception as e:
+            print("[ERROR] AdmissionProcessor failed:", repr(e))
+            raise
+
+        try:
+
+            timeline_result = (
+                TimelineProcessor()
+                .process(
+                    appointments,
+                    admissions,
+                    tests
+                )
+            )
+
+            facts.extend(
+                timeline_result.facts
+            )
+
+        except Exception as e:
+            print("[ERROR] TimelineProcessor failed:", repr(e))
+            raise
+
+        try:
+
+            risk_result = (
+                RiskProcessor()
+                .process(facts)
+            )
+
+            facts.extend(
+                risk_result.facts
+            )
+
+        except Exception as e:
+            print("[ERROR] RiskProcessor failed:", repr(e))
+            raise
 
         # --------------------
         # Build Structured Context
         # --------------------
+
 
         structured_context = (
 

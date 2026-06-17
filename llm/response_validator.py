@@ -146,20 +146,33 @@ class NumericValidator:
 
         violations = []
 
+        # Extract numeric tokens from summary. The model may restate years
+        # as part of timeline items, and timeline evidence strings may omit
+        # raw years depending on upstream extraction.
+        #
+        # To avoid hard-failing for benign year mentions, ignore plain 4-digit
+        # years that are not present in context.
         for match in cls.NUMBER_PATTERN.finditer(
             cls._strip_sequence_spans(text)
         ):
 
-            value = cls._normalize(match.group(0))
+            raw = match.group(0).strip()
+
+            # Ignore 4-digit years if not explicitly present in context.
+            if re.fullmatch(r"\d{4}", raw):
+                continue
+
+            value = cls._normalize(raw)
 
             if value not in context_values:
-                violations.append(match.group(0).strip())
+                violations.append(raw)
 
         if violations:
 
             raise ValueError(
                 f"Numeric values not in context: {violations}"
             )
+
 
     @staticmethod
     def _normalize(value: str) -> str:

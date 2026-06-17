@@ -41,7 +41,8 @@ class RiskProcessor:
 
                 ClinicalFact(
 
-                    fact_id=
+                    id=
+
                     f"RISK_{risk}",
 
                     category=

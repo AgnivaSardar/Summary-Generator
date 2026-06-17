@@ -36,7 +36,6 @@ class SummaryGenerator:
     MAX_VALIDATION_RETRIES = 2
 
     def __init__(self):
-
         self.ollama = (
             OllamaClient()
         )
@@ -60,19 +59,53 @@ class SummaryGenerator:
         context_start = time.time()
 
         context_text = (
-
             SynopsisContextBuilder()
             .build(
                 patient_context
             )
         )
 
-        print("\n===== CONTEXT =====")
+        print("\n===== CONTEXT (STRUCTURED KEYS) =====")
+        try:
+            patient_block = (patient_context.get("patient", {}) or {})
+            print(
+                "patient_id:",
+                patient_block.get("patient_id")
+            )
+            print(
+                "patient_name:",
+                patient_block.get("patient_name")
+            )
+            print(
+                "counts => active_problems:",
+                len(patient_context.get("active_problems", []) or [])
+            )
+            print(
+                "counts => evidence:",
+                len(patient_context.get("evidence", []) or [])
+            )
+            print(
+                "counts => risks:",
+                len(patient_context.get("risks", []) or [])
+            )
+            print(
+                "counts => timeline:",
+                len(patient_context.get("timeline", []) or [])
+            )
+        except Exception:
+            print("(could not print structured context details)")
+
+        print("\n===== CONTEXT (TEXT SENT TO LLM) =====")
         print(
-            "Context preview: "
+            "Context preview (first 700 chars): "
             f"{context_text[:700]}"
         )
-        print("===================")
+        if len(context_text) > 700:
+            print(
+                "Context preview (last 700 chars): "
+                f"{context_text[-700:]}"
+            )
+        print("========================================")
 
         context_time = (
             time.time()
@@ -147,9 +180,7 @@ class SummaryGenerator:
         # Ollama
         # -----------------------------
 
-        print(
-            "\nSending to Ollama..."
-        )
+        print("\nSending to Ollama...")
 
         ollama_start = time.time()
 
@@ -169,9 +200,7 @@ class SummaryGenerator:
             f"{ollama_time:.2f}s"
         )
 
-        print(
-            "Received Response"
-        )
+        print("Received Response")
 
         # -----------------------------
         # Validation
@@ -187,7 +216,6 @@ class SummaryGenerator:
         # -----------------------------
 
         formatted_response = (
-
             ResponseFormatter()
             .format(
                 response
@@ -354,3 +382,4 @@ class SummaryGenerator:
         )
 
         return placeholder_count >= 10
+

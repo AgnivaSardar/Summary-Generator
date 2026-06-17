@@ -28,47 +28,34 @@ class PatientSummaryService:
             or settings.DEFAULT_COMPANY_ID
         )
 
-        context = (
-
-            PatientContextService()
-            .build_context(
-                patient_id,
-                resolved_company_id
+        try:
+            context = (
+                PatientContextService()
+                .build_context(
+                    patient_id,
+                    resolved_company_id
+                )
             )
-        )
+        except Exception as e:
+            print("[ERROR] PatientContextService.build_context failed:", repr(e))
+            raise
 
-        summary = (
-
-            SynopsisGenerationService()
-            .generate(
-                context
+        try:
+            summary = (
+                SynopsisGenerationService()
+                .generate(
+                    context
+                )
             )
-        )
-
-        update_result = (
-            PatientHistorySynopsisClient(
-                settings.API_BASE_URL,
-                settings.SYNOPSIS_UPDATE_URL,
-                settings.SYNOPSIS_UPDATE_TIMEOUT_SECONDS
-            )
-            .update_synopsis(
-                patient_id,
-                resolved_company_id,
-                summary
-            )
-        )
+        except Exception as e:
+            print("[ERROR] SynopsisGenerationService.generate failed:", repr(e))
+            raise
 
         return {
-
-            "patient_id":
-            patient_id,
-
-            "company_id":
-            resolved_company_id,
-
-            "summary":
-            summary,
-
-            "synopsis_update":
-            update_result
+            "patient_id": patient_id,
+            "company_id": resolved_company_id,
+            "summary": summary
         }
+
+
+

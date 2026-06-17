@@ -30,6 +30,18 @@ class TimelineProcessor:
                 f"{a.diagnosis}"
             })
 
+            if getattr(a, "doctorMedicine", ""):
+                events.append({
+                    "date": a.appointmentDate,
+                    "event": f"Medication: {a.doctorMedicine}"
+                })
+
+            if getattr(a, "doctorAdvice", ""):
+                events.append({
+                    "date": a.appointmentDate,
+                    "event": f"Advice: {a.doctorAdvice}"
+                })
+
         for a in admissions:
 
             events.append({
@@ -41,6 +53,18 @@ class TimelineProcessor:
                 f"Admission: "
                 f"{a.diagnosis}"
             })
+
+            if getattr(a, "doctorMedicine", ""):
+                events.append({
+                    "date": a.admissionDate,
+                    "event": f"Medication: {a.doctorMedicine}"
+                })
+
+            if getattr(a, "doctorAdvice", ""):
+                events.append({
+                    "date": a.admissionDate,
+                    "event": f"Advice: {a.doctorAdvice}"
+                })
 
         for t in tests:
 
@@ -61,7 +85,7 @@ class TimelineProcessor:
 
         fact = ClinicalFact(
 
-            fact_id="TIMELINE",
+            id="TIMELINE",
 
             category="TIMELINE",
 

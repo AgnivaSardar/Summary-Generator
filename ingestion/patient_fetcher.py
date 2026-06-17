@@ -26,12 +26,28 @@ class PatientFetcher:
         )
 
     def fetch_patient_history(self, patient_id, company_id):
-        url = f"{self.api_base_url}/patient-details?patientId={patient_id}&companyId={company_id}"
+        # Upstream API expects patientId in the format "DEM/<patientId>".
+        # If callers send just "<patientId>", normalize it to avoid 500s.
+        normalized_patient_id = (
+            patient_id
+            if str(patient_id).startswith("DEM/")
+            else f"DEM/{patient_id}"
+        )
+
+        url = (
+            f"{self.api_base_url}/patient-details?"
+            f"patientId={normalized_patient_id}&"
+            f"companyId={company_id}"
+        )
+
         response = requests.get(url)
         if response.status_code == 200:
             return response.json()
-        else:
-            raise Exception(f"Failed to fetch patient history: {response.status_code} - {response.text}")
+
+        raise Exception(
+            f"Failed to fetch patient history: {response.status_code} - {response.text}"
+        )
+
 
     def _parse_date(self, value):
         if isinstance(value, date):

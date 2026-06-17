@@ -9,7 +9,7 @@ class RiskAnalyzer:
         rules_path = (
             Path(__file__)
             .parent.parent
-            / "medical_knowledge"
+            / "knowledge"
             / "risk_rules.json"
         )
 

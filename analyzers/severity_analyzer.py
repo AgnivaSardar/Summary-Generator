@@ -9,7 +9,7 @@ class SeverityAnalyzer:
         rules_path = (
             Path(__file__)
             .parent.parent
-            / "medical_knowledge"
+            / "knowledge"
             / "custom_severity_rules.json"
         )
 

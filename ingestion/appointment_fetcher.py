@@ -23,10 +23,33 @@ class AppointmentFetcher:
         ]
 
     def fetch_appointment_history(self, patient_id):
-        url = f"{self.api_base_url}/appointments?patientId={patient_id}"
+        from urllib.parse import quote
+
+        normalized_patient_id = (
+            patient_id
+            if str(patient_id).startswith("DEM/")
+            else f"DEM/{patient_id}"
+        )
+
+        patient_id_q = quote(str(normalized_patient_id), safe="")
+        url = f"{self.api_base_url}/appointments?patientId={patient_id_q}"
         response = requests.get(url)
+
+        print("[DEBUG] AppointmentFetcher URL:", url)
+        print("[DEBUG] AppointmentFetcher status:", response.status_code)
+        if response.status_code != 200:
+            print("[DEBUG] AppointmentFetcher body snippet:", response.text[:1000])
+
         if response.status_code == 200:
-            return response.json()
+
+            body = response.json()
+            print("[DEBUG] AppointmentFetcher json type:", type(body))
+            if isinstance(body, dict):
+                print("[DEBUG] AppointmentFetcher json keys:", list(body.keys())[:20])
+            if isinstance(body, list):
+                print("[DEBUG] AppointmentFetcher list length:", len(body))
+            return body
+
         else:
             raise Exception(f"Failed to fetch appointment history: {response.status_code} - {response.text}")
 

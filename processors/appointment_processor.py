@@ -23,6 +23,17 @@ class AppointmentProcessor:
 
         facts = []
 
+        # Sort by appointmentDate so "latest" items are first.
+        # appointmentDate may be a date object; if it's missing, fall back to minimal ordering.
+        appointments_sorted = sorted(
+            appointments,
+            key=lambda a: a.appointmentDate
+            if getattr(a, "appointmentDate", None) is not None
+            else 0
+        )
+
+        latest_appointment = appointments_sorted[-1] if appointments_sorted else None
+
         for appointment in appointments:
 
             if (
@@ -34,7 +45,7 @@ class AppointmentProcessor:
 
                     ClinicalFact(
 
-                        fact_id=
+                        id=
                         "COMPLAINT",
 
                         category=
@@ -64,7 +75,7 @@ class AppointmentProcessor:
 
                     ClinicalFact(
 
-                        fact_id=
+                        id=
                         "DIAGNOSIS",
 
                         category=
@@ -82,6 +93,37 @@ class AppointmentProcessor:
 
                         priority_score=
                         50
+                    )
+                )
+
+        # Add latest medication and advice so they appear in evidence/timeline.
+        if latest_appointment:
+
+            if getattr(latest_appointment, "doctorMedicine", ""):
+                facts.append(
+                    ClinicalFact(
+                        id="APPOINTMENT_MEDICATION",
+                        category="MEDICATION",
+                        fact=TextCleaner.clean(latest_appointment.doctorMedicine),
+                        severity="LOW",
+                        priority_score=35,
+                        evidence=[
+                            TextCleaner.clean(latest_appointment.doctorMedicine)
+                        ]
+                    )
+                )
+
+            if getattr(latest_appointment, "doctorAdvice", ""):
+                facts.append(
+                    ClinicalFact(
+                        id="APPOINTMENT_ADVICE",
+                        category="ADVICE",
+                        fact=TextCleaner.clean(latest_appointment.doctorAdvice),
+                        severity="LOW",
+                        priority_score=30,
+                        evidence=[
+                            TextCleaner.clean(latest_appointment.doctorAdvice)
+                        ]
                     )
                 )
 
