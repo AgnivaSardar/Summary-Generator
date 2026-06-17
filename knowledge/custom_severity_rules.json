@@ -1,0 +1,26 @@
+{
+  "POTASSIUM": {
+    "critical_low": 2.5,
+    "high": 5.5,
+    "critical_high": 6.5
+  },
+
+  "SODIUM": {
+    "critical_low": 120,
+    "critical_high": 160
+  },
+
+  "TROPONIN": {
+    "critical_high": 0.4
+  },
+
+  "CA125": {
+    "critical_high": 500
+  },
+
+  "HBA1C": {
+    "moderate": 7,
+    "high": 8,
+    "critical": 10
+  }
+}

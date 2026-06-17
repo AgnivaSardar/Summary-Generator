@@ -1,0 +1,34 @@
+{
+  "RENAL_RISK": {
+    "conditions": [
+      "DIABETES MELLITUS",
+      "CREATININE_HIGH"
+    ]
+  },
+
+  "CARDIAC_RISK": {
+    "conditions": [
+      "HYPERTENSION",
+      "CORONARY ARTERY DISEASE"
+    ]
+  },
+
+  "ONCOLOGY_RISK": {
+    "conditions": [
+      "NEUROENDOCRINE CARCINOMA"
+    ]
+  },
+
+  "THYROID_RISK": {
+    "conditions": [
+      "TSH_HIGH",
+      "HYPOTHYROIDISM"
+    ]
+  },
+
+  "ANEMIA_RISK": {
+    "conditions": [
+      "HEMOGLOBIN_LOW"
+    ]
+  }
+}

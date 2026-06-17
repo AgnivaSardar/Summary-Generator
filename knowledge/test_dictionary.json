@@ -1,0 +1,273 @@
+{
+  "CREATININE": {
+    "canonical_name": "CREATININE",
+    "category": "RENAL",
+    "severity_method": "RANGE_BASED",
+    "direction": "LOWER_BETTER",
+    "trendable": true
+  },
+
+  "UREA": {
+    "canonical_name": "UREA",
+    "category": "RENAL",
+    "severity_method": "RANGE_BASED",
+    "direction": "LOWER_BETTER",
+    "trendable": true
+  },
+
+  "EGFR": {
+    "canonical_name": "EGFR",
+    "category": "RENAL",
+    "severity_method": "RANGE_BASED",
+    "direction": "HIGHER_BETTER",
+    "trendable": true
+  },
+
+  "URIC ACID": {
+    "canonical_name": "URIC ACID",
+    "category": "RENAL",
+    "severity_method": "RANGE_BASED",
+    "direction": "LOWER_BETTER",
+    "trendable": true
+  },
+
+  "TSH": {
+    "canonical_name": "TSH",
+    "category": "ENDOCRINE",
+    "severity_method": "RANGE_BASED",
+    "direction": "TARGET_RANGE",
+    "trendable": true
+  },
+
+  "FREE T3": {
+    "canonical_name": "FREE T3",
+    "category": "ENDOCRINE",
+    "severity_method": "RANGE_BASED",
+    "direction": "TARGET_RANGE",
+    "trendable": true
+  },
+
+  "FREE T4": {
+    "canonical_name": "FREE T4",
+    "category": "ENDOCRINE",
+    "severity_method": "RANGE_BASED",
+    "direction": "TARGET_RANGE",
+    "trendable": true
+  },
+
+  "HBA1C": {
+    "canonical_name": "HBA1C",
+    "category": "ENDOCRINE",
+    "severity_method": "CUSTOM",
+    "direction": "LOWER_BETTER",
+    "trendable": true
+  },
+
+  "FBS": {
+    "canonical_name": "FBS",
+    "category": "ENDOCRINE",
+    "severity_method": "CUSTOM",
+    "direction": "LOWER_BETTER",
+    "trendable": true
+  },
+
+  "PPBS": {
+    "canonical_name": "PPBS",
+    "category": "ENDOCRINE",
+    "severity_method": "CUSTOM",
+    "direction": "LOWER_BETTER",
+    "trendable": true
+  },
+
+  "HEMOGLOBIN": {
+    "canonical_name": "HEMOGLOBIN",
+    "category": "HEMATOLOGY",
+    "severity_method": "RANGE_BASED",
+    "direction": "HIGHER_BETTER",
+    "trendable": true
+  },
+
+  "RBC": {
+    "canonical_name": "RBC",
+    "category": "HEMATOLOGY",
+    "severity_method": "RANGE_BASED",
+    "direction": "TARGET_RANGE",
+    "trendable": true
+  },
+
+  "WBC": {
+    "canonical_name": "WBC",
+    "category": "HEMATOLOGY",
+    "severity_method": "RANGE_BASED",
+    "direction": "TARGET_RANGE",
+    "trendable": true
+  },
+
+  "PLATELETS": {
+    "canonical_name": "PLATELETS",
+    "category": "HEMATOLOGY",
+    "severity_method": "RANGE_BASED",
+    "direction": "TARGET_RANGE",
+    "trendable": true
+  },
+
+  "ESR": {
+    "canonical_name": "ESR",
+    "category": "INFECTION",
+    "severity_method": "RANGE_BASED",
+    "direction": "LOWER_BETTER",
+    "trendable": true
+  },
+
+  "CRP": {
+    "canonical_name": "CRP",
+    "category": "INFECTION",
+    "severity_method": "CUSTOM",
+    "direction": "LOWER_BETTER",
+    "trendable": true
+  },
+
+  "PROCALCITONIN": {
+    "canonical_name": "PROCALCITONIN",
+    "category": "INFECTION",
+    "severity_method": "CUSTOM",
+    "direction": "LOWER_BETTER",
+    "trendable": true
+  },
+
+  "ALT": {
+    "canonical_name": "ALT",
+    "category": "LIVER",
+    "severity_method": "RANGE_BASED",
+    "direction": "LOWER_BETTER",
+    "trendable": true
+  },
+
+  "AST": {
+    "canonical_name": "AST",
+    "category": "LIVER",
+    "severity_method": "RANGE_BASED",
+    "direction": "LOWER_BETTER",
+    "trendable": true
+  },
+
+  "BILIRUBIN": {
+    "canonical_name": "BILIRUBIN",
+    "category": "LIVER",
+    "severity_method": "RANGE_BASED",
+    "direction": "LOWER_BETTER",
+    "trendable": true
+  },
+
+  "ALBUMIN": {
+    "canonical_name": "ALBUMIN",
+    "category": "LIVER",
+    "severity_method": "RANGE_BASED",
+    "direction": "HIGHER_BETTER",
+    "trendable": true
+  },
+
+  "SODIUM": {
+    "canonical_name": "SODIUM",
+    "category": "ELECTROLYTE",
+    "severity_method": "CUSTOM",
+    "direction": "TARGET_RANGE",
+    "trendable": true
+  },
+
+  "POTASSIUM": {
+    "canonical_name": "POTASSIUM",
+    "category": "ELECTROLYTE",
+    "severity_method": "CUSTOM",
+    "direction": "TARGET_RANGE",
+    "trendable": true
+  },
+
+  "CHLORIDE": {
+    "canonical_name": "CHLORIDE",
+    "category": "ELECTROLYTE",
+    "severity_method": "RANGE_BASED",
+    "direction": "TARGET_RANGE",
+    "trendable": true
+  },
+
+  "CALCIUM": {
+    "canonical_name": "CALCIUM",
+    "category": "ELECTROLYTE",
+    "severity_method": "CUSTOM",
+    "direction": "TARGET_RANGE",
+    "trendable": true
+  },
+
+  "MAGNESIUM": {
+    "canonical_name": "MAGNESIUM",
+    "category": "ELECTROLYTE",
+    "severity_method": "CUSTOM",
+    "direction": "TARGET_RANGE",
+    "trendable": true
+  },
+
+  "TROPONIN": {
+    "canonical_name": "TROPONIN",
+    "category": "CARDIAC",
+    "severity_method": "CUSTOM",
+    "direction": "LOWER_BETTER",
+    "trendable": false
+  },
+
+  "BNP": {
+    "canonical_name": "BNP",
+    "category": "CARDIAC",
+    "severity_method": "CUSTOM",
+    "direction": "LOWER_BETTER",
+    "trendable": true
+  },
+
+  "D-DIMER": {
+    "canonical_name": "D-DIMER",
+    "category": "COAGULATION",
+    "severity_method": "CUSTOM",
+    "direction": "LOWER_BETTER",
+    "trendable": true
+  },
+
+  "PT": {
+    "canonical_name": "PT",
+    "category": "COAGULATION",
+    "severity_method": "RANGE_BASED",
+    "direction": "TARGET_RANGE",
+    "trendable": true
+  },
+
+  "INR": {
+    "canonical_name": "INR",
+    "category": "COAGULATION",
+    "severity_method": "CUSTOM",
+    "direction": "TARGET_RANGE",
+    "trendable": true
+  },
+
+  "CA125": {
+    "canonical_name": "CA125",
+    "category": "ONCOLOGY",
+    "severity_method": "CUSTOM",
+    "direction": "LOWER_BETTER",
+    "trendable": true
+  },
+
+  "CEA": {
+    "canonical_name": "CEA",
+    "category": "ONCOLOGY",
+    "severity_method": "CUSTOM",
+    "direction": "LOWER_BETTER",
+    "trendable": true
+  },
+
+  "PSA": {
+    "canonical_name": "PSA",
+    "category": "ONCOLOGY",
+    "severity_method": "CUSTOM",
+    "direction": "LOWER_BETTER",
+    "trendable": true
+  }
+}
