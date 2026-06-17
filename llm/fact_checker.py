@@ -14,12 +14,12 @@ class SynopsisFactChecker:
     )
 
     NON_RISK_SECTION_PATTERN = re.compile(
-        r"^(PROBLEMS|IMPORTANT FINDINGS|TIMELINE):\s*(.*)$",
+        r"^(PROBLEMS|IMPORTANT FINDINGS|TIMELINE|MEDICATION|ADVICE):\s*(.*)$",
         re.IGNORECASE | re.MULTILINE
     )
 
     SECTION_PATTERN = re.compile(
-        r"^(PROBLEMS|IMPORTANT FINDINGS|RISKS|TIMELINE):\s*(.*)$",
+        r"^(PROBLEMS|IMPORTANT FINDINGS|RISKS|TIMELINE|MEDICATION|ADVICE):\s*(.*)$",
         re.IGNORECASE | re.MULTILINE
     )
 

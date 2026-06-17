@@ -20,7 +20,9 @@ class PatientContextBuilder:
     def build(
         self,
         patient,
-        facts
+        facts,
+        latest_medicine="",
+        latest_advice=""
     ):
 
         active_problems = (
@@ -70,5 +72,11 @@ class PatientContextBuilder:
             timeline,
 
             "evidence":
-            evidence
+            evidence,
+
+            "medication":
+            latest_medicine,
+
+            "advice":
+            latest_advice
         }

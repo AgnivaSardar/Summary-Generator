@@ -21,13 +21,7 @@ class TestFetcher:
     def fetch_test_history(self, patient_id):
         from urllib.parse import quote
 
-        normalized_patient_id = (
-            patient_id
-            if str(patient_id).startswith("DEM/")
-            else f"DEM/{patient_id}"
-        )
-
-        patient_id_q = quote(str(normalized_patient_id), safe="")
+        patient_id_q = quote(str(patient_id), safe="")
         url = f"{self.api_base_url}/test-results?patientId={patient_id_q}"
         response = requests.get(url)
 

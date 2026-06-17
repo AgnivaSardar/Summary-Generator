@@ -49,17 +49,39 @@ class DeterministicSerializer:
                 ).strip()
 
             elif line.startswith("TIMELINE:"):
-                timeline = line.replace(
+                raw_timeline = line.replace(
                     "TIMELINE:",
                     ""
                 ).strip()
+                real_events = []
+                for event in raw_timeline.split(";"):
+                    event_stripped = event.strip()
+                    if event_stripped in ["Appointment:", "Admission:", "Test:", "Appointment", "Admission", "Test"]:
+                        continue
+                    if event_stripped.startswith("Appointment:") and not event_stripped.replace("Appointment:", "").strip():
+                        continue
+                    if event_stripped.startswith("Admission:") and not event_stripped.replace("Admission:", "").strip():
+                        continue
+                    if event_stripped.startswith("Test:") and not event_stripped.replace("Test:", "").strip():
+                        continue
+                    real_events.append(event_stripped)
+                timeline = "; ".join(real_events) if real_events else ""
 
         summary_parts = []
 
         if patient:
-            summary_parts.append(
-                f"{patient}."
-            )
+            # Try to format "Name | Age | Gender" into a natural language sentence,
+            # e.g., "Mr. Rohit Sen is a 22-year-old Male."
+            patient_parts = [p.strip() for p in patient.split("|")]
+            if len(patient_parts) == 3:
+                name, age, gender = patient_parts
+                summary_parts.append(
+                    f"{name} is a {age}-year-old {gender}."
+                )
+            else:
+                summary_parts.append(
+                    f"{patient}."
+                )
 
         if problems:
             summary_parts.append(

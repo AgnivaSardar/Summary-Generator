@@ -32,6 +32,9 @@ class SynopsisContextBuilder:
             [-self.MAX_TIMELINE :]
         )
 
+        medication = context.get("medication", "")
+        advice = context.get("advice", "")
+
         patient_name = patient.get(
             "patient_name",
             ""
@@ -135,6 +138,18 @@ class SynopsisContextBuilder:
                     for x in timeline
                     if str(x).strip()
                 )
+            )
+
+        if medication:
+
+            sections.append(
+                f"MEDICATION: {medication}"
+            )
+
+        if advice:
+
+            sections.append(
+                f"ADVICE: {advice}"
             )
 
         return "\n\n".join(sections)

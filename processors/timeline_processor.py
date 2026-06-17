@@ -18,6 +18,8 @@ class TimelineProcessor:
 
         events = []
 
+        from normalizers.text_cleaner import TextCleaner
+
         for a in appointments:
 
             events.append({
@@ -31,15 +33,16 @@ class TimelineProcessor:
             })
 
             if getattr(a, "doctorMedicine", ""):
+                from parsers.medicine_parser import MedicineParser
                 events.append({
                     "date": a.appointmentDate,
-                    "event": f"Medication: {a.doctorMedicine}"
+                    "event": f"Medication: {MedicineParser.clean_and_translate(a.doctorMedicine)}"
                 })
 
             if getattr(a, "doctorAdvice", ""):
                 events.append({
                     "date": a.appointmentDate,
-                    "event": f"Advice: {a.doctorAdvice}"
+                    "event": f"Advice: {TextCleaner.clean(a.doctorAdvice)}"
                 })
 
         for a in admissions:
@@ -55,15 +58,16 @@ class TimelineProcessor:
             })
 
             if getattr(a, "doctorMedicine", ""):
+                from parsers.medicine_parser import MedicineParser
                 events.append({
                     "date": a.admissionDate,
-                    "event": f"Medication: {a.doctorMedicine}"
+                    "event": f"Medication: {MedicineParser.clean_and_translate(a.doctorMedicine)}"
                 })
 
             if getattr(a, "doctorAdvice", ""):
                 events.append({
                     "date": a.admissionDate,
-                    "event": f"Advice: {a.doctorAdvice}"
+                    "event": f"Advice: {TextCleaner.clean(a.doctorAdvice)}"
                 })
 
         for t in tests:

@@ -26,17 +26,9 @@ class PatientFetcher:
         )
 
     def fetch_patient_history(self, patient_id, company_id):
-        # Upstream API expects patientId in the format "DEM/<patientId>".
-        # If callers send just "<patientId>", normalize it to avoid 500s.
-        normalized_patient_id = (
-            patient_id
-            if str(patient_id).startswith("DEM/")
-            else f"DEM/{patient_id}"
-        )
-
         url = (
             f"{self.api_base_url}/patient-details?"
-            f"patientId={normalized_patient_id}&"
+            f"patientId={patient_id}&"
             f"companyId={company_id}"
         )
 

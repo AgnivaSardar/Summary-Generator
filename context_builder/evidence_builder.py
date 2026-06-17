@@ -22,6 +22,9 @@ class EvidenceBuilder:
 
         for fact in facts_sorted[:20]:
 
+            if fact.id == "TIMELINE":
+                continue
+
             evidence.extend(
                 fact.evidence
             )

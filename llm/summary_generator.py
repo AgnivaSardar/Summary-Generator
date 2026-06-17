@@ -123,6 +123,7 @@ class SummaryGenerator:
         )
 
         if self._has_no_meaningful_clinical_content(
+            patient_context,
             context_text
         ):
 
@@ -371,6 +372,7 @@ class SummaryGenerator:
 
     def _has_no_meaningful_clinical_content(
         self,
+        patient_context,
         context_text: str
     ) -> bool:
 
@@ -381,5 +383,38 @@ class SummaryGenerator:
             )
         )
 
-        return placeholder_count >= 10
+        if placeholder_count >= 10:
+            return True
+
+        # Check if there is any real clinical data
+        active_problems = patient_context.get("active_problems", [])
+        evidence = patient_context.get("evidence", [])
+        risks = patient_context.get("risks", [])
+        timeline = patient_context.get("timeline", [])
+        medication = patient_context.get("medication", "")
+        advice = patient_context.get("advice", "")
+
+        real_timeline = []
+        for event in timeline:
+            event_stripped = str(event).strip()
+            if event_stripped in ["Appointment:", "Admission:", "Test:", "Appointment", "Admission", "Test"]:
+                continue
+            if event_stripped.startswith("Appointment:") and not event_stripped.replace("Appointment:", "").strip():
+                continue
+            if event_stripped.startswith("Admission:") and not event_stripped.replace("Admission:", "").strip():
+                continue
+            if event_stripped.startswith("Test:") and not event_stripped.replace("Test:", "").strip():
+                continue
+            real_timeline.append(event)
+
+        has_any_data = (
+            len(active_problems) > 0 or
+            len(evidence) > 0 or
+            len(risks) > 0 or
+            len(real_timeline) > 0 or
+            len(str(medication).strip()) > 0 or
+            len(str(advice).strip()) > 0
+        )
+
+        return not has_any_data
 

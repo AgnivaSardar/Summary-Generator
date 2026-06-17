@@ -50,7 +50,8 @@ class TestProcessor:
 
         for (test_name,records) in grouped.items():
 
-            latest = sorted(records, key=lambda x: x.testDate)[-1]
+            records_sorted = sorted(records, key=lambda x: x.testDate)
+            latest = records_sorted[-1]
             parsed_value = (TestValueParser.parse(latest.testResult))
             parsed_range = (RangeParser.parse(latest.testRange))
 
@@ -91,6 +92,26 @@ class TestProcessor:
                 str(category).upper() if category else ""
             )
 
+            # Collect all numeric values chronologically to build a trend or single latest value
+            numeric_values = []
+            for record in records_sorted:
+                parsed_rec = TestValueParser.parse(record.testResult)
+                if parsed_rec["type"] == "numeric":
+                    numeric_values.append(record.testResult.strip())
+
+            if len(numeric_values) > 1:
+                evidence_list = [
+                    f"{test_name} trend: " + " → ".join(numeric_values)
+                ]
+            elif len(numeric_values) == 1:
+                evidence_list = [
+                    f"{test_name} value: {numeric_values[0]}"
+                ]
+            else:
+                evidence_list = [
+                    f"{test_name} value: {value}"
+                ]
+
             facts.append(
 
                 ClinicalFact(
@@ -108,10 +129,7 @@ class TestProcessor:
 
                     priority_score=priority,
 
-                    evidence=[
-                        f"Latest value "
-                        f"{value}"
-                    ]
+                    evidence=evidence_list
                 )
             )
 

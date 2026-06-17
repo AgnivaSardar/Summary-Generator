@@ -182,6 +182,48 @@ class PatientContextService:
             raise
 
         # --------------------
+        # Find All Medications and Advice chronologically
+        # --------------------
+        med_events = []
+        for app in appointments:
+            if getattr(app, "appointmentDate", None) and getattr(app, "doctorMedicine", "").strip():
+                med_events.append((app.appointmentDate, app.doctorMedicine))
+        for adm in admissions:
+            if getattr(adm, "admissionDate", None) and getattr(adm, "doctorMedicine", "").strip():
+                med_events.append((adm.admissionDate, adm.doctorMedicine))
+
+        med_events.sort(key=lambda x: x[0])
+
+        advice_events = []
+        for app in appointments:
+            if getattr(app, "appointmentDate", None) and getattr(app, "doctorAdvice", "").strip():
+                advice_events.append((app.appointmentDate, app.doctorAdvice))
+        for adm in admissions:
+            if getattr(adm, "admissionDate", None) and getattr(adm, "doctorAdvice", "").strip():
+                advice_events.append((adm.admissionDate, adm.doctorAdvice))
+
+        advice_events.sort(key=lambda x: x[0])
+
+        from parsers.medicine_parser import MedicineParser
+        from normalizers.text_cleaner import TextCleaner
+
+        med_strings = []
+        for dt, med in med_events:
+            dt_str = dt.strftime("%d-%m-%Y")
+            cleaned_med = MedicineParser.clean_and_translate(med)
+            if cleaned_med:
+                med_strings.append(f"{dt_str}: {cleaned_med}")
+        all_medications = "; ".join(med_strings)
+
+        advice_strings = []
+        for dt, adv in advice_events:
+            dt_str = dt.strftime("%d-%m-%Y")
+            cleaned_adv = TextCleaner.clean(adv)
+            if cleaned_adv:
+                advice_strings.append(f"{dt_str}: {cleaned_adv}")
+        all_advice = "; ".join(advice_strings)
+
+        # --------------------
         # Build Structured Context
         # --------------------
 
@@ -191,7 +233,9 @@ class PatientContextService:
             PatientContextBuilder()
             .build(
                 patient,
-                facts
+                facts,
+                latest_medicine=all_medications,
+                latest_advice=all_advice
             )
         )
 

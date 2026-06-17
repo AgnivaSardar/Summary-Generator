@@ -57,7 +57,73 @@ class AdmissionProcessor:
                         "HIGH",
 
                         priority_score=
-                        70
+                        70,
+
+                        evidence=[
+                            TextCleaner.clean(admission.diagnosis)
+                        ]
+                    )
+                )
+
+            if getattr(admission, "desieseDescription", ""):
+
+                facts.append(
+
+                    ClinicalFact(
+
+                        id=
+                        "ADMISSION_DISEASE_DESC",
+
+                        category=
+                        "DIAGNOSIS",
+
+                        fact=
+                        TextCleaner
+                        .clean(
+                            admission
+                            .desieseDescription
+                        ),
+
+                        severity=
+                        "MODERATE",
+
+                        priority_score=
+                        45,
+
+                        evidence=[
+                            TextCleaner.clean(admission.desieseDescription)
+                        ]
+                    )
+                )
+
+            if getattr(admission, "onExamination", ""):
+
+                facts.append(
+
+                    ClinicalFact(
+
+                        id=
+                        "ADMISSION_EXAMINATION",
+
+                        category=
+                        "EXAMINATION",
+
+                        fact=
+                        TextCleaner
+                        .clean(
+                            admission
+                            .onExamination
+                        ),
+
+                        severity=
+                        "LOW",
+
+                        priority_score=
+                        15,
+
+                        evidence=[
+                            TextCleaner.clean(admission.onExamination)
+                        ]
                     )
                 )
 
@@ -87,7 +153,11 @@ class AdmissionProcessor:
                         "LOW",
 
                         priority_score=
-                        30
+                        30,
+
+                        evidence=[
+                            TextCleaner.clean(admission.pastHistory)
+                        ]
                     )
                 )
 
@@ -117,7 +187,11 @@ class AdmissionProcessor:
                         "LOW",
 
                         priority_score=
-                        25
+                        25,
+
+                        evidence=[
+                            TextCleaner.clean(admission.courseInHospital)
+                        ]
                     )
                 )
 
@@ -125,15 +199,17 @@ class AdmissionProcessor:
         if latest_admission:
 
             if getattr(latest_admission, "doctorMedicine", ""):
+                from parsers.medicine_parser import MedicineParser
+                translated_med = MedicineParser.clean_and_translate(latest_admission.doctorMedicine)
                 facts.append(
                     ClinicalFact(
                         id="ADMISSION_MEDICATION",
                         category="MEDICATION",
-                        fact=TextCleaner.clean(latest_admission.doctorMedicine),
+                        fact=translated_med,
                         severity="LOW",
                         priority_score=35,
                         evidence=[
-                            TextCleaner.clean(latest_admission.doctorMedicine)
+                            translated_med
                         ]
                     )
                 )

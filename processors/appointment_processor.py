@@ -62,7 +62,42 @@ class AppointmentProcessor:
                         "LOW",
 
                         priority_score=
-                        20
+                        20,
+
+                        evidence=[
+                            TextCleaner.clean(appointment.chiefComplaints)
+                        ]
+                    )
+                )
+
+            if getattr(appointment, "onExamination", ""):
+
+                facts.append(
+
+                    ClinicalFact(
+
+                        id=
+                        "APPOINTMENT_EXAMINATION",
+
+                        category=
+                        "EXAMINATION",
+
+                        fact=
+                        TextCleaner
+                        .clean(
+                            appointment
+                            .onExamination
+                        ),
+
+                        severity=
+                        "LOW",
+
+                        priority_score=
+                        15,
+
+                        evidence=[
+                            TextCleaner.clean(appointment.onExamination)
+                        ]
                     )
                 )
 
@@ -92,7 +127,11 @@ class AppointmentProcessor:
                         "MODERATE",
 
                         priority_score=
-                        50
+                        50,
+
+                        evidence=[
+                            TextCleaner.clean(appointment.diagnosis)
+                        ]
                     )
                 )
 
@@ -100,15 +139,17 @@ class AppointmentProcessor:
         if latest_appointment:
 
             if getattr(latest_appointment, "doctorMedicine", ""):
+                from parsers.medicine_parser import MedicineParser
+                translated_med = MedicineParser.clean_and_translate(latest_appointment.doctorMedicine)
                 facts.append(
                     ClinicalFact(
                         id="APPOINTMENT_MEDICATION",
                         category="MEDICATION",
-                        fact=TextCleaner.clean(latest_appointment.doctorMedicine),
+                        fact=translated_med,
                         severity="LOW",
                         priority_score=35,
                         evidence=[
-                            TextCleaner.clean(latest_appointment.doctorMedicine)
+                            translated_med
                         ]
                     )
                 )
