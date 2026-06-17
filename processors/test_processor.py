@@ -60,16 +60,24 @@ class TestProcessor:
 
             value = (parsed_value["value"])
 
-            abnormality = (AbnormalityAnalyzer.analyze(value, parsed_range["min"], parsed_range["max"]))
-
-            severity = (
-                self.severity
-                .analyze_range_based(
-                    value,
-                    parsed_range["min"],
-                    parsed_range["max"]
+            if parsed_range:
+                abnormality = (AbnormalityAnalyzer.analyze(value, parsed_range["min"], parsed_range["max"]))
+                severity = (
+                    self.severity
+                    .analyze_range_based(
+                        value,
+                        parsed_range["min"],
+                        parsed_range["max"]
+                    )
                 )
-            )
+            else:
+                severity = self.severity.analyze_custom(test_name, value)
+                if severity == "UNKNOWN":
+                    severity = "NORMAL"
+                if severity in ["HIGH", "CRITICAL", "MODERATE"]:
+                    abnormality = "HIGH"
+                else:
+                    abnormality = "NORMAL"
 
             # PriorityAnalyzer expects severity *level* and a category string.
             # SeverityAnalyzer returns a string level (e.g. "LOW", "NORMAL").

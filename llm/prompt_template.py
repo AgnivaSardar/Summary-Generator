@@ -22,6 +22,7 @@ Rules:
 - Do not assign a year to a condition unless that exact year-condition
   pairing appears in TIMELINE.
 - Do not rewrite "2024 CKD progressed to Stage 3" as "CKD Stage 3 in 2024".
+- Include the exact numeric values and/or trends of all laboratory tests (e.g. 'GLUCOSE RANDOM value: 142') in the synopsis findings. Do not omit or summarize the numeric values of tests even if the test name or its high/low status is mentioned elsewhere.
 - If RISKS is provided in PATIENT DATA, mention it, e.g. "risks include [risks]".
 - Do not mention risks or write "risks include" if RISKS is not provided in PATIENT DATA.
 - If MEDICATION is provided in PATIENT DATA, mention all listed medications near the end, preserving their dates exactly, e.g. "medications include [medications with dates]".
@@ -36,8 +37,8 @@ Rules:
 - You may use light connecting words such as "with", "and", "including",
   "findings include", "risks include", "timeline includes", "medications include",
   and "doctor advice includes".
-- For very large or repetitive PATIENT DATA, do not enumerate every item.
-- Select the most important active problems, findings, risks, and timeline items.
+- For very large or repetitive PATIENT DATA, do not enumerate every item (such as timeline events).
+- Select the most important active problems, risks, and timeline items. However, you MUST always include all laboratory test results and their exact values/trends.
 - Finish with a complete item or sentence; do not stop mid-value or mid-word.
 - Output only the synopsis.
 
@@ -98,6 +99,7 @@ Copy timeline events as complete phrases from TIMELINE.
 Do not assign a year to a condition unless that exact year-condition
 pairing appears in TIMELINE.
 Do not rewrite "2024 CKD progressed to Stage 3" as "CKD Stage 3 in 2024".
+Include the exact numeric values and/or trends of all laboratory tests (e.g. 'GLUCOSE RANDOM value: 142') in the synopsis findings. Do not omit or summarize the numeric values of tests even if the test name or its high/low status is mentioned elsewhere.
 If RISKS is provided in PATIENT DATA, mention it, e.g. "risks include [risks]".
 Do not mention risks if RISKS is not provided in PATIENT DATA.
 If MEDICATION is provided in PATIENT DATA, mention all listed medications near the end, preserving their dates exactly, e.g. "medications include [medications with dates]".
@@ -108,7 +110,7 @@ Do not use interpretation words such as indicating, suggests, likely,
 possible, evidence of, reflecting, progressive, significant, declined,
 increased, decreased, or history of unless the exact word appears in
 PATIENT DATA.
-For very large or repetitive PATIENT DATA, do not enumerate every item.
+For very large or repetitive PATIENT DATA, do not enumerate every item. However, you MUST always include all laboratory test results and their exact values/trends.
 Finish with a complete item or sentence. Output only the synopsis.
 
 PATIENT DATA:

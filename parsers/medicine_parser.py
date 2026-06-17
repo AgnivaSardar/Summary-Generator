@@ -34,13 +34,13 @@ class MedicineParser:
 
             parts = []
             if m > 0:
-                unit = "tablet" if m == 1 else f"{m} tablets"
+                unit = "1 tablet" if m == 1 else f"{m} tablets"
                 parts.append(f"{unit} in the morning")
             if a > 0:
-                unit = "tablet" if a == 1 else f"{a} tablets"
+                unit = "1 tablet" if a == 1 else f"{a} tablets"
                 parts.append(f"{unit} in the afternoon")
             if n > 0:
-                unit = "tablet" if n == 1 else f"{n} tablets"
+                unit = "1 tablet" if n == 1 else f"{n} tablets"
                 parts.append(f"{unit} at night")
 
             if not parts:

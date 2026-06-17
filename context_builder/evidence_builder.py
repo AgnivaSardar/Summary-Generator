@@ -25,6 +25,12 @@ class EvidenceBuilder:
             if fact.id == "TIMELINE":
                 continue
 
+            if fact.category in ["MEDICATION", "ADVICE"]:
+                continue
+
+            if fact.id in ["APPOINTMENT_MEDICATION", "ADMISSION_MEDICATION", "APPOINTMENT_ADVICE", "ADMISSION_ADVICE"]:
+                continue
+
             evidence.extend(
                 fact.evidence
             )
