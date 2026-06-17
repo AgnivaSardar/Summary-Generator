@@ -4,14 +4,19 @@ from services.patient_context_service import (
     PatientContextService
 )
 
+from services.patient_summary_service import (
+    PatientSummaryService
+)
+
 router = APIRouter()
 
 
 @router.get(
-    "/context/{patient_id}"
+    "/context/{patient_id:path}"
 )
 def generate_context(
-    patient_id: str
+    patient_id: str,
+    company_id: str | None = None
 ):
 
     service = (
@@ -20,7 +25,8 @@ def generate_context(
 
     context = (
         service.build_context(
-            patient_id
+            patient_id,
+            company_id
         )
     )
 
@@ -31,3 +37,23 @@ def generate_context(
         "context":
         context
     }
+
+
+@router.post(
+    "/summary/{patient_id:path}"
+)
+def generate_summary(
+    patient_id: str,
+    company_id: str | None = None
+):
+
+    service = (
+        PatientSummaryService()
+    )
+
+    return (
+        service.generate(
+            patient_id,
+            company_id
+        )
+    )

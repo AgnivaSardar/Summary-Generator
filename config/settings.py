@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic_settings import BaseSettings
 
 
@@ -10,6 +12,12 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
 
     API_BASE_URL: str
+
+    DEFAULT_COMPANY_ID: str = "00262"
+
+    SYNOPSIS_UPDATE_URL: Optional[str] = None
+
+    SYNOPSIS_UPDATE_TIMEOUT_SECONDS: int = 30
 
     OLLAMA_URL: str
 

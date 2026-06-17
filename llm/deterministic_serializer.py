@@ -3,6 +3,8 @@ import re
 
 class DeterministicSerializer:
 
+    MAX_WORDS = 300
+
     @staticmethod
     def build(
         context_text: str
@@ -75,8 +77,35 @@ class DeterministicSerializer:
             )
 
         if timeline:
-            summary_parts.append(
+            timeline_part = (
                 f"Timeline includes {timeline}."
             )
 
-        return " ".join(summary_parts)
+            candidate = " ".join(
+                summary_parts
+                + [timeline_part]
+            )
+
+            if (
+                len(candidate.split())
+                <= DeterministicSerializer.MAX_WORDS
+            ):
+
+                summary_parts.append(
+                    timeline_part
+                )
+
+        summary = " ".join(summary_parts)
+
+        words = summary.split()
+
+        if (
+            len(words)
+            <= DeterministicSerializer.MAX_WORDS
+        ):
+
+            return summary
+
+        return " ".join(
+            words[: DeterministicSerializer.MAX_WORDS]
+        )

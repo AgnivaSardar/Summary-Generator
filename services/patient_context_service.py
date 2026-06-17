@@ -45,7 +45,8 @@ class PatientContextService:
 
     def build_context(
         self,
-        patient_id: str
+        patient_id: str,
+        company_id: str | None = None
     ):
 
         # --------------------
@@ -55,7 +56,11 @@ class PatientContextService:
         patient = (
             PatientFetcher(
                 settings.API_BASE_URL
-            ).fetch(patient_id)
+            ).fetch(
+                patient_id,
+                company_id
+                or settings.DEFAULT_COMPANY_ID
+            )
         )
 
         tests = (

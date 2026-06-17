@@ -48,15 +48,15 @@ class OllamaClient:
 
                     "options": {
 
-                        "temperature": 0.1,
+                        "temperature": 0,
 
-                        "top_p": 0.9,
+                        "top_p": 0.2,
 
-                        "top_k": 20,
+                        "top_k": 10,
 
-                        "repeat_penalty": 1.1,
+                        "repeat_penalty": 1.05,
 
-                        "num_predict": 350,
+                        "num_predict": 450,
 
                         "seed": 42
                     }
@@ -97,14 +97,28 @@ class OllamaClient:
 
             data = response.json()
 
-            print("\n===== FULL OLLAMA JSON =====")
-            print(data)
-            print("===========================\n")
-
             result = data.get("response", "")
 
+            print(
+                "Ollama done_reason: "
+                f"{data.get('done_reason', '')}"
+            )
+
+            print(
+                "Ollama eval_count: "
+                f"{data.get('eval_count', '')}"
+            )
+
             print("RAW RESPONSE:")
-            print(repr(result))
+            print(result)
+
+            self.last_done_reason = (
+                data.get("done_reason", "")
+            )
+
+            self.last_eval_count = (
+                data.get("eval_count", 0)
+            )
 
             return result
 

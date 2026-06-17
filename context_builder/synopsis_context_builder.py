@@ -63,6 +63,26 @@ class SynopsisContextBuilder:
                 "Values:"
             )
 
+            text = text.replace(
+                "increasing:",
+                "values:"
+            )
+
+            text = text.replace(
+                "Increasing:",
+                "Values:"
+            )
+
+            text = text.replace(
+                "decreasing:",
+                "values:"
+            )
+
+            text = text.replace(
+                "Decreasing:",
+                "Values:"
+            )
+
             cleaned_findings.append(
                 text
             )

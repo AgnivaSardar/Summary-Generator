@@ -1,4 +1,5 @@
 import time
+import re
 
 from llm.deterministic_serializer import (
     DeterministicSerializer
@@ -9,6 +10,7 @@ from llm.fact_checker import (
 )
 
 from llm.prompt_template import (
+    RETRY_PROMPT,
     SYNOPSIS_PROMPT
 )
 
@@ -30,6 +32,8 @@ from context_builder.synopsis_context_builder import (
 
 
 class SummaryGenerator:
+
+    MAX_VALIDATION_RETRIES = 2
 
     def __init__(self):
 
@@ -64,7 +68,10 @@ class SummaryGenerator:
         )
 
         print("\n===== CONTEXT =====")
-        print(context_text)
+        print(
+            "Context preview: "
+            f"{context_text[:700]}"
+        )
         print("===================")
 
         context_time = (
@@ -82,18 +89,23 @@ class SummaryGenerator:
             f"{len(context_text)} chars"
         )
 
-        placeholder_count = (
-            context_text.count("Condition")
-            + context_text.count("Finding")
-        )
-
-        if placeholder_count >= 5:
+        if self._has_no_meaningful_clinical_content(
+            context_text
+        ):
 
             print(
-                "Placeholder mode activated"
+                "No meaningful clinical content detected; "
+                "using deterministic serializer"
             )
 
-            return context_text
+            return (
+                ResponseFormatter()
+                .format(
+                    DeterministicSerializer.build(
+                        context_text
+                    )
+                )
+            )
 
         # -----------------------------
         # Build Prompt
@@ -110,7 +122,10 @@ class SummaryGenerator:
         )
 
         print("\n===== PROMPT =====")
-        print(prompt)
+        print(
+            "Prompt preview: "
+            f"{prompt[:500]}"
+        )
         print("==================")
 
         prompt_time = (
@@ -162,32 +177,10 @@ class SummaryGenerator:
         # Validation
         # -----------------------------
 
-        try:
-
-            ResponseValidator.validate(
-                response
-            )
-
-            SynopsisFactChecker.validate(
-                response,
-                context_text
-            )
-
-        except Exception as e:
-
-            print(
-                f"VALIDATION FAILED: {e}"
-            )
-
-            print(
-                "USING DETERMINISTIC SERIALIZER"
-            )
-
-            response = (
-                DeterministicSerializer.build(
-                    context_text
-                )
-            )
+        response = self._validate_or_retry(
+            response,
+            context_text
+        )
 
         # -----------------------------
         # Formatting
@@ -217,3 +210,147 @@ class SummaryGenerator:
         )
 
         return formatted_response
+
+    def _validate_or_retry(
+        self,
+        response: str,
+        context_text: str
+    ) -> str:
+
+        validation_error = ""
+
+        for attempt in range(
+            self.MAX_VALIDATION_RETRIES + 1
+        ):
+
+            response = (
+                ResponseFormatter()
+                .format(
+                    response
+                )
+            )
+
+            try:
+
+                if (
+                    getattr(
+                        self.ollama,
+                        "last_done_reason",
+                        ""
+                    )
+                    == "length"
+                ):
+
+                    raise ValueError(
+                        "Response stopped due to token limit"
+                    )
+
+                self._validate_response(
+                    response,
+                    context_text
+                )
+
+                return response
+
+            except Exception as e:
+
+                validation_error = str(e)
+
+                print(
+                    "VALIDATION FAILED: "
+                    f"{validation_error}"
+                )
+
+                if attempt >= self.MAX_VALIDATION_RETRIES:
+
+                    raise ValueError(
+                        "Synopsis failed validation after "
+                        f"{self.MAX_VALIDATION_RETRIES} retries: "
+                        f"{validation_error}"
+                    )
+
+                response = self._retry_synopsis(
+                    context_text,
+                    response,
+                    validation_error
+                )
+
+        raise ValueError(
+            "Synopsis failed validation: "
+            f"{validation_error}"
+        )
+
+    def _retry_synopsis(
+        self,
+        context_text: str,
+        previous_response: str,
+        validation_error: str
+    ) -> str:
+
+        print("Retrying with retry prompt...")
+
+        retry_prompt = (
+            RETRY_PROMPT
+            .replace(
+                "{error}",
+                validation_error
+            )
+            .replace(
+                "{previous_synopsis}",
+                previous_response
+            )
+            .replace(
+                "{context}",
+                context_text
+            )
+        )
+
+        retry_start = time.time()
+
+        retry_response = (
+            self.ollama.generate(
+                retry_prompt
+            )
+        )
+
+        retry_time = (
+            time.time()
+            - retry_start
+        )
+
+        print(
+            f"Retry Ollama Time: "
+            f"{retry_time:.2f}s"
+        )
+
+        return retry_response
+
+    def _validate_response(
+        self,
+        response: str,
+        context_text: str
+    ) -> None:
+
+        ResponseValidator.validate(
+            response,
+            context_text
+        )
+
+        SynopsisFactChecker.validate(
+            response,
+            context_text
+        )
+
+    def _has_no_meaningful_clinical_content(
+        self,
+        context_text: str
+    ) -> bool:
+
+        placeholder_count = len(
+            re.findall(
+                r"\b(?:Condition|Finding|Risk|Event)\s+\d+\b",
+                context_text
+            )
+        )
+
+        return placeholder_count >= 10
