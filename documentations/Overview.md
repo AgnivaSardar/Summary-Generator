@@ -1,259 +1,190 @@
+# AI Clinical Synopsis Service Overview
 
-# AI Clinical Synopsis System — Detailed File-Level Overview
+This project exposes a FastAPI service that turns patient-history data into a physician-facing clinical synopsis. It fetches patient records from an upstream backend, converts raw visits, admissions, and tests into structured clinical facts, builds a deterministic LLM context, generates a synopsis with Gemini or Ollama, validates the response, and posts the synopsis back to the backend.
 
-This document expands the system overview with explicit, file-level descriptions so engineers and reviewers understand the responsibilities, inputs, outputs, owners, and risks for each major artifact.
+## Runtime Contract
 
----
+- `GET /` returns application name, version, and status.
+- `GET /api/v1/health` returns service health.
+- `GET /api/v1/ping` returns a simple ping response.
+- `GET /api/v1/context/{patient_id}` returns the structured context used for synopsis generation.
+- `POST /api/v1/summary/{patient_id}` generates a synopsis and posts it to the backend.
 
-## Top-level service
+The route parameter is declared as a path parameter, so patient IDs containing `/` must be URL encoded by callers.
 
-**Purpose:** Provide a fast, reliable API that turns a `patient_id` into a physician-facing clinical synopsis.
+## Top-Level Files
 
-**Service contract:** `POST /summary/{patient_id}` → `{ summary, facts_used, timing_ms, warnings }`.
+- `main.py`: creates the FastAPI app, registers health and summary routers, and exposes the root endpoint.
+- `requirements.txt`: Python package dependencies for running and testing the service.
+- `.env`: local runtime configuration. This file should contain backend URLs, model settings, and optional Gemini credentials. Do not commit secrets.
+- `README.md`: short project entry point with links to setup and overview documentation.
 
-**Operational owners:** Core product engineering, clinical informatics, ML engineers (shared).
+## Configuration
 
----
+`config/settings.py` defines typed settings with `pydantic-settings`.
 
-## `main.py`
+Required values:
 
-- Purpose: Application bootstrap and lifecycle manager.
-- Responsibilities: Initialize logging, load `settings`, register API routes and middleware, create shared clients (DB, HTTP, Ollama), and start the ASGI server (Uvicorn/Hypercorn).
-- When: executed at process start.
-- Inputs: environment variables and `config/settings.py` defaults.
-- Outputs: running web process exposing the `api/` routes.
-- Why this matters: centralizes process-level configuration (timezones, logging levels, feature toggles). Keep heavy work out of `main.py` to avoid slow cold starts.
+- `API_BASE_URL`: upstream patient-history backend base URL.
+- `OLLAMA_URL`: local or remote Ollama base URL.
+- `OLLAMA_MODEL`: Ollama model name used when Gemini is not configured.
 
----
+Optional/defaulted values:
 
-## Environment and dependencies
+- `APP_NAME`: defaults to `AI Clinical Synopsis Service`.
+- `APP_VERSION`: defaults to `1.0.0`.
+- `DEFAULT_COMPANY_ID`: defaults to `00262`.
+- `SYNOPSIS_UPDATE_URL`: overrides the default synopsis update endpoint.
+- `SYNOPSIS_UPDATE_TIMEOUT_SECONDS`: defaults to `30`.
+- `GEMINI_API_KEY`: when set, generation uses Gemini instead of Ollama.
+- `GEMINI_MODEL`: defaults to `gemini-3.1-flash-lite`.
+- `LOG_LEVEL`: defaults to `INFO`.
 
-- `requirements.txt`: pins runtime dependencies. Keep this minimal and pin versions for reproducible CI artifacts.
-- `.env`: runtime secrets and environment overrides (never checked in). Typical keys: `OLLAMA_URL`, `OLLAMA_MODEL`, `OLLAMA_TIMEOUT`, `LOG_LEVEL`, `ENVIRONMENT`.
+`config/constants.py` and `config/logging_config.py` hold shared constants and logging setup.
 
-Security note: secrets must be injected at deploy time via the secret manager; never commit API keys.
+## API Layer
 
----
+`api/health_routes.py` defines lightweight operational endpoints:
 
-## `config/`
+- `GET /api/v1/health`
+- `GET /api/v1/ping`
 
-`settings.py`:
-- Purpose: Typed settings object (Pydantic) exposing configuration with defaults and validation.
-- Key fields: `OLLAMA_URL`, `MODEL_NAME`, `REQUEST_TIMEOUT_MS`, `MAX_CONTEXT_TOKENS`, `HISTORY_DAYS`.
-- Best practice: use feature toggles for experimentation and keep environment-specific overrides out of code.
+`api/summary_routes.py` defines the main product endpoints:
 
-`constants.py`:
-- Purpose: Single source of truth for numeric/domain constants used across analyzers and processors (`MAX_FACTS`, `CRITICAL_SCORE`, `DEFAULT_WINDOW_DAYS`).
+- `GET /api/v1/context/{patient_id:path}` builds and returns structured patient context.
+- `POST /api/v1/summary/{patient_id:path}` builds context, generates the synopsis, posts it to the backend, and returns the generated summary.
 
----
+The summary route includes an in-memory rate limiter with defaults of 5 requests per minute and 20 requests per day per running process.
 
-## `api/` (public interface)
+## Ingestion Layer
 
-`summary_routes.py`:
-- Purpose: HTTP endpoint for synopsis generation.
-- Responsibilities: request validation (Pydantic schemas), authentication/authorization, request scoping, response formatting, and error mapping.
-- Inputs: `patient_id` and optional flags (e.g., `include_evidence`, `verbosity`).
-- Outputs: `summary` text plus structured metadata (`facts_count`, `time_ms`, `warnings`).
+The fetchers in `ingestion/` adapt upstream API responses into internal dataclass models.
 
-`patient_routes.py`:
-- Purpose: developer and QA endpoints for introspection — raw fetch results, normalized data, intermediate facts, and built context.
-- Use cases: clinical review, debugging, and local reproducibility.
+- `patient_fetcher.py`: calls `GET /patient-details?patientId=...&companyId=...` and returns a `Patient`.
+- `test_fetcher.py`: calls `GET /test-results?patientId=...` and returns `TestResult` records.
+- `appointment_fetcher.py`: calls `GET /appointments?patientId=...` and returns `Appointment` records.
+- `admission_fetcher.py`: calls `GET /admissions?patientId=...` and returns `Admission` records.
 
-Design principle: routes must remain thin; core logic belongs in `services/`.
+These fetchers parse ISO dates and `dd-mm-yyyy` dates, URL-encode patient IDs where needed, and raise exceptions for non-200 upstream responses.
 
----
+## Models
 
-## `services/`
+`models/` contains dataclasses passed between pipeline layers.
 
-`patient_summary_service.py`:
-- Purpose: orchestrator that coordinates the pipeline end-to-end.
-- Responsibilities: call fetchers, run normalizers, dispatch processors, run analyzers, build context, call LLM, validate responses, and assemble the final payload.
-- Error handling: should return partial results with warnings on non-critical failures (e.g., missing radiology) and fail fast on catastrophic errors (auth failure).
+- `patient.py`: patient demographics and identifiers.
+- `test_result.py`: test name, date, result, and reference range.
+- `appointment.py`: appointment date, complaints, diagnosis, examination, medications, and advice.
+- `admission.py`: admission details, diagnosis, hospital course, medications, and advice.
+- `clinical_fact.py`: normalized evidence-backed fact used by processors, context builders, analyzers, and LLM prompts.
+- `processor_result.py`: processor output envelope containing facts and related processing data.
+- `patient_context.py`: structured context model helpers.
 
-`patient_context_service.py`:
-- Purpose: translate scored `ClinicalFact`s into the `PatientContext` object and final prompt.
-- Responsibilities: de-duplication, grouping related facts, limiting context size, and generating evidence pointers.
+## Normalizers and Parsers
 
-Instrumentation: track time per stage, facts produced per processor, and LLM token counts.
+`normalizers/` and `parsers/` clean raw clinical text and extract structured values.
 
----
+- `text_cleaner.py`: cleans noisy text.
+- `test_name_normalizer.py`: maps test names through `knowledge/test_dictionary.json`.
+- `medicine_normalizer.py` and `medicine_parser.py`: normalize and clean medication strings.
+- `diagnosis_normalizer.py`: maps diagnosis synonyms through `knowledge/diagnosis_dictionary.json`.
+- `test_value_parser.py`: extracts numeric and textual test values.
+- `range_parser.py`: parses reference ranges.
 
-## `ingestion/` (adapters)
+## Analyzers
 
-Design principle: each fetcher is an adapter to one external system and returns typed domain models.
+`analyzers/` assigns interpretation, severity, priority, and risk signals.
 
-- `patient_fetcher.py`: demographics, identifiers, and encounter metadata. Handles missing identifiers and multiple IDs mapping.
-- `diagnosis_fetcher.py`: returns single-source diagnosis entries with codes and free text.
-- `medication_fetcher.py`: handles active medications, historic exposures, administration logs, and reconciliation lists.
-- `lab_fetcher.py`: returns timestamped `LabResult` entries; includes unit normalization hints. Supports paging or streaming for long histories.
-- `pathology_fetcher.py`: pulls finalized pathology reports, IHC markers, and structured conclusions when available.
-- `radiology_fetcher.py`: retrieves imaging reports and extracts critical findings (e.g., `pulmonary embolus`, `intracranial hemorrhage`).
-- `admission_fetcher.py`: admission/discharge records and acuity markers.
-- `procedure_fetcher.py`: discrete procedure events, operative notes and timestamps.
+- `abnormality_analyzer.py`: classifies test values against ranges.
+- `severity_analyzer.py`: uses severity rules from `knowledge/severity_rules.json` and custom rules.
+- `trend_analyzer.py`: detects simple trends in repeated test values.
+- `priority_analyzer.py`: ranks facts for downstream context inclusion.
+- `risk_analyzer.py`: applies compound rules from `knowledge/risk_rules.json`.
+- `timeline_analyzer.py` and `evidence_extractor.py`: support timeline/evidence-oriented processing.
 
-Failure modes: network errors, auth issues, and partial data — fetchers should be resilient and return best-effort data with provenance.
+## Processors
 
----
+`processors/` converts fetched records into `ClinicalFact` objects.
 
-## `normalizers/`
+- `test_processor.py`: processes labs and test reports, including abnormality, severity, trends, and priorities.
+- `appointment_processor.py`: extracts appointment complaints, diagnosis, examination, medication, and advice facts.
+- `admission_processor.py`: extracts admission diagnosis, examination, history, hospital course, medication, and advice facts.
+- `timeline_processor.py`: produces chronological events from appointments, admissions, and tests.
+- `risk_processor.py`: derives risk facts from existing facts.
+- `priority_processor.py`: wraps priority handling for processor results.
 
-Purpose: translate vendor/institution-specific strings into canonical tokens.
+## Context Builders
 
-- `diagnosis_normalizer.py`: maps text to canonical diagnosis labels and ICD codes where possible. Outputs confidence scores and link to source text.
-- `medication_normalizer.py`: normalizes drug names, routes, strengths, and produces canonical drug identifiers.
-- `lab_normalizer.py`: canonicalizes lab test names, maps units, and offers converted values to preferred units.
+`context_builder/` compresses processor output into structured and text context.
 
-Risks: incorrect normalization leads to systematic misinterpretation. Prefer high-confidence rules and escalate low-confidence matches for review.
+- `patient_context_builder.py`: builds the main structured dictionary containing patient details, active problems, risks, timeline, evidence, medication, advice, and pending tests.
+- `synopsis_context_builder.py`: renders the structured context into the prompt-ready text block.
+- `active_problem_builder.py`, `clinical_timeline_builder.py`, `risk_summary_builder.py`, and `evidence_builder.py`: build focused context sections.
 
----
+## LLM Layer
 
-## `knowledge/` (domain data)
+`llm/` handles prompt creation, model calls, validation, and formatting.
 
-Purpose: centralized clinical knowledge used by normalizers, analyzers, and processors.
+- `summary_generator.py`: orchestrates context rendering, prompt construction, generation, validation, and final formatting.
+- `prompt_template.py`: stores the synopsis prompt and retry prompt.
+- `ollama_client.py`: calls `POST {OLLAMA_URL}/api/generate`.
+- `gemini_client.py`: calls Google Gemini `generateContent` when `GEMINI_API_KEY` is configured.
+- `response_validator.py`: validates numbers and timeline years against the source context.
+- `fact_checker.py`: checks generated text against source facts.
+- `response_formatter.py`: normalizes final output formatting.
+- `deterministic_serializer.py`: creates a deterministic fallback summary when there is no meaningful clinical content.
 
-- `test_dictionary.json`: canonical lab name mappings and preferred units.
-- `diagnosis_dictionary.json`: diagnosis synonym maps and canonical labels.
-- `medication_dictionary.json`: medication name maps and strength parsing rules.
-- `reference_ranges.json`: age/sex-specific normal ranges and critical thresholds for lab interpretation.
-- `severity_rules.json`: rule definitions mapping patterns to severity levels.
-- `risk_rules.json`: clinical risk composition rules.
+## Services
 
-Governance: changes to `knowledge/` must be reviewed by clinical informatics and tracked with changelogs.
+`services/` connects the whole workflow.
 
----
+- `patient_context_service.py`: fetches patient data, runs processors, collects medications/advice/pending tests, and builds structured context.
+- `synopsis_generation_service.py`: delegates synopsis creation to `SummaryGenerator`.
+- `patient_history_synopsis_client.py`: posts the generated synopsis to the upstream backend.
+- `patient_summary_service.py`: end-to-end orchestration for `POST /summary/{patient_id}`.
 
-## `models/`
+## Knowledge Data
 
-Purpose: typed Pydantic models that define the shape of data passed between layers.
+`knowledge/` contains JSON dictionaries and rule sets used by normalizers and analyzers.
 
-- `patient.py`: demographics, identifiers, encounter summaries.
-- `diagnosis.py`: diagnosis text, codes, onset/offset dates.
-- `medication.py`: name, dose, route, frequency, start/stop.
-- `lab_result.py`: test name, value, unit, timestamp, reference range pointer.
-- `pathology.py` / `radiology.py`: structured report fields with original text.
-- `clinical_fact.py`: primary artifact produced by processors. Fields include `fact`, `type`, `severity`, `score`, `evidence`, `first_seen`, `last_seen`, and `source`.
-- `processor_result.py`: envelope describing processor output and metrics.
+- `test_dictionary.json`
+- `medicine_dictionary.json`
+- `diagnosis_dictionary.json`
+- `severity_rules.json`
+- `custom_severity_rules.json`
+- `risk_rules.json`
 
-Best practice: use Pydantic validation to fail-fast on malformed inputs.
+Changes here can alter clinical interpretation, so they should be reviewed carefully.
 
----
+## Tests and Local Scripts
 
-## `analyzers/`
+`tests/` contains script-style checks and regression scenarios.
 
-Purpose: score and tag `ClinicalFact`s using deterministic logic.
+- `test_ollama.py`: smoke test for a local Ollama server.
+- `test_summary_api_generator.py`: calls the running FastAPI summary endpoint.
+- `test_summary_generator.py`: directly exercises the summary generator with sample contexts.
+- `test_new_features.py`: exercises processors and context builders for newer behavior.
+- `test_bela_bhattacharya.py`: full local regression scenario using hand-built patient, appointment, admission, and test data.
 
-- `trend_analyzer.py`: fits simple linear/trend heuristics to numeric series and returns `IMPROVING|STABLE|WORSENING` with explanation.
-- `abnormality_analyzer.py`: compares values to `reference_ranges.json` and returns `NORMAL|HIGH|LOW|CRITICAL`.
-- `severity_analyzer.py`: maps clinical objects into `LOW|MODERATE|HIGH|CRITICAL` severity buckets.
-- `priority_analyzer.py`: combines severity, recency, and diagnostic significance to score facts for LLM inclusion.
-- `timeline_analyzer.py`: compacts events into readable chronologies for the final synopsis.
+Some scripts call live model services, so make sure `.env` and Ollama or Gemini are configured before running them.
 
-Notes: analyzers should be heavily unit-tested and have deterministic outputs to ensure reproducibility.
+## Request Flow
 
----
+1. Caller sends `POST /api/v1/summary/{patient_id}?company_id=...`.
+2. `PatientSummaryService` resolves the company ID.
+3. `PatientContextService` fetches patient details, tests, appointments, and admissions from `API_BASE_URL`.
+4. Processors convert raw records into clinical facts.
+5. Risk, timeline, medication, advice, and pending-test summaries are assembled.
+6. `PatientContextBuilder` creates structured context.
+7. `SummaryGenerator` renders context text and fills the synopsis prompt.
+8. Gemini is used if `GEMINI_API_KEY` exists; otherwise Ollama is used.
+9. Validators compare generated output against the source context.
+10. `PatientHistorySynopsisClient` posts the synopsis to `SYNOPSIS_UPDATE_URL` or `{API_BASE_URL}/ai-synopsis`.
+11. The API returns `patient_id`, `company_id`, and `summary`.
 
-## `processors/`
+## Operational Notes
 
-Purpose: convert normalized records into `ClinicalFact`s — atomic, evidence-backed statements used by context builders.
-
-Contract:
-- Input: normalized domain models for the processor's domain.
-- Output: `ProcessorResult` containing `ClinicalFact[]`, `errors[]`, and timing metrics.
-
-Key processors (detailed):
-- `demographics_processor.py`: returns statements like `75-year-old female` and flags for advanced age.
-- `chief_complaint_processor.py`: extracts presenting problems text and timestamps.
-- `diagnosis_processor.py`: prioritizes definitive diagnoses and surfaces chronicity and staging information.
-- `chronic_condition_processor.py`: synthesizes long-term conditions and indicates control/status.
-- `medication_processor.py`: lists current meds, flags omissions and high-risk interactions.
-- `admission_processor.py`: summarizes recent admissions and escalation events.
-- `procedure_processor.py`: lists key procedural interventions and dates.
-- `pathology_processor.py`: extracts final pathology diagnoses, grade, and key IHC markers.
-- `radiology_processor.py`: surfaces high-impact imaging findings with dates.
-- `oncology_processor.py`: aggregates tumor descriptors, markers, and response info.
-- `renal_processor.py`: interprets creatinine/eGFR and produces functional status statements.
-- `others...` (cardiology, liver, infection, electrolytes, coagulation): domain-specific fact generation.
-- `timeline_processor.py`: creates the patient timeline used in `synopsis_context_builder`.
-- `active_problem_processor.py`: produces the top active problems list.
-- `risk_processor.py`: outputs compound risk statements (e.g., `High renal progression risk`).
-- `priotiy_processor.py` / `priority_processor.py`: final ranking and trimming before context build.
-
-Ownership: clinicians and domain engineers should co-author processor heuristics and approve test fixtures.
-
----
-
-## `context/`
-
-Purpose: compress and format facts into the LLM prompt.
-
-- `patient_context_builder.py`: collects facts, de-duplicates, groups related entries (labs with diagnoses), and produces `PatientContext` with evidence links.
-- `synopsis_context_builder.py`: converts `PatientContext` into the final prompt text per `prompt_template.py`, ensuring token limits are respected and evidence is attached concisely.
-
-Truncation policy: prefer dropping low-priority facts and preserving high-severity, recent evidence.
-
----
-
-## `llm/`
-
-Purpose: manage LLM communication and safety.
-
-- `ollama_client.py`: network client with timeouts, retries, and optional streaming. Records token usage and latencies.
-- `prompt_template.py`: canonical prompt instructions. Version this file and include examples of good/bad outputs for prompt tuning.
-- `summary_generator.py`: prepares the prompt, invokes the client, and performs light post-processing (normalize headings, fix whitespace, assert section presence).
-- `response_validator.py`: validates clinical completeness (e.g., ensures major diagnoses are present). On failure, either expand the prompt and retry or return a structured warning.
-
-Safety: ensure the validator checks for hallucinations and missing high-evidence diagnoses.
-
----
-
-## `tests/`
-
-Purpose: validate the pipeline at unit and integration levels.
-
-- Unit tests for processors, normalizers, and analyzers.
-- Integration tests for end-to-end flow with mocked fetchers and mocked LLM.
-- Regression fixtures for critical patients and edge cases.
-
-CI: run tests on every PR; require clinical sign-off for knowledge changes.
-
----
-
-## Critical Files to Review First (summary)
-
-- `knowledge/test_dictionary.json`
-- `knowledge/reference_ranges.json`
-- `analyzers/priority_analyzer.py`
-- `processors/diagnosis_processor.py`
-- `processors/pathology_processor.py`
-- `context/patient_context_builder.py`
-- `context/synopsis_context_builder.py`
-- `llm/prompt_template.py`
-- `llm/summary_generator.py`
-- `llm/response_validator.py`
-
-These files are the highest leverage points for clinical correctness, prompt cost, and overall clinician trust.
-
----
-
-## Performance Targets
-
-- Small patient: 1–3 seconds
-- Average patient: 4–8 seconds
-- Complex oncology patient: 6–12 seconds
-
-Assumptions: reasonable Ollama throughput and network latency; aggressive caching of stable artifacts improves tail latency.
-
----
-
-## Developer Guidance
-
-- Add new normalizers/processors with fixtures and unit tests in `tests/`.
-- Keep `api/` thin; business rules belong in `services/`.
-- Version `knowledge/` files and require clinical review for changes.
-
----
-
-## One-line summary
-
-This repo is a Clinical Intelligence Engine: transform raw records → prioritized clinical facts → LLM-ready context → physician synopsis.
-
+- The service is synchronous. Long upstream calls or model calls will hold the request open.
+- The in-memory rate limiter resets when the process restarts and is not shared across multiple workers.
+- Debug logging currently prints fetched record counts, sample records, prompt previews, and raw model responses.
+- The context endpoint is useful for debugging upstream data and processor output without calling the LLM.
+- For local usage, see `documentations/Setup.md`.
