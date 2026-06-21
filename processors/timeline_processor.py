@@ -71,16 +71,19 @@ class TimelineProcessor:
                 })
 
         for t in tests:
+            from parsers.test_value_parser import TestValueParser
+            parsed = TestValueParser.parse(t.testResult)
+            # Only include non-numeric tests (biopsies, IHC, procedures) or pending tests in the timeline
+            if parsed["type"] != "numeric":
+                events.append({
 
-            events.append({
+                    "date":
+                    t.testDate,
 
-                "date":
-                t.testDate,
-
-                "event":
-                f"Test: "
-                f"{t.testName}"
-            })
+                    "event":
+                    f"Test: "
+                    f"{t.testName}"
+                })
 
         events.sort(
             key=lambda x:
