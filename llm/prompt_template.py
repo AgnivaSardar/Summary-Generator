@@ -11,7 +11,7 @@ Rules:
   Chronic Kidney Disease Stage 3, and Hypertension..."
 - Write a readable clinical paragraph, not a raw copied list.
 - Group the paragraph as: patient identity, active problems, important
-  findings, listed risks (if present), relevant timeline, medications (if present), and doctor advice (if present).
+  findings, listed risks (if present), relevant timeline, medications (if present), doctor advice (if present), and pending tests (if present).
 - Preserve medical terms, years, risks, and numeric values exactly.
 - Preserve numeric sequences exactly, including all intermediate values.
 - For sequence findings, copy the full sequence exactly as written.
@@ -29,6 +29,8 @@ Rules:
 - Do not mention medications or write "medications include" if MEDICATION is not provided in PATIENT DATA.
 - If ADVICE is provided in PATIENT DATA, mention all doctor advice near the end, preserving their dates exactly, e.g. "doctor advice includes [advice with dates]".
 - Do not mention doctor advice or write "doctor advice includes" if ADVICE is not provided in PATIENT DATA.
+- If PENDING TESTS is provided in PATIENT DATA, mention all pending tests near the end, preserving their dates exactly, e.g. "pending tests include [pending tests with dates]".
+- Do not mention pending tests or write "pending tests include" if PENDING TESTS is not provided in PATIENT DATA.
 - Do not infer, explain, or add facts.
 - Do not use interpretation words such as indicating, suggests,
   likely, possible, evidence of, reflecting, progressive, significant,
@@ -36,7 +38,7 @@ Rules:
   appears in PATIENT DATA.
 - You may use light connecting words such as "with", "and", "including",
   "findings include", "risks include", "timeline includes", "medications include",
-  and "doctor advice includes".
+  "doctor advice includes", and "pending tests include".
 - For very large or repetitive PATIENT DATA, do not enumerate every item (such as timeline events).
 - Select the most important active problems, risks, and timeline items. However, you MUST always include all laboratory test results and their exact values/trends.
 - Finish with a complete item or sentence; do not stop mid-value or mid-word.
@@ -89,7 +91,7 @@ One paragraph. Start with patient identity in natural language.
 Write a readable clinical paragraph, not a raw copied list.
 Use the exact patient name from the PATIENT line.
 Group the paragraph as: patient identity, active problems, important
-findings, listed risks (if present), relevant timeline, medications (if present), and doctor advice (if present).
+findings, listed risks (if present), relevant timeline, medications (if present), doctor advice (if present), and pending tests (if present).
 Copy exact medical terms, dates, risks, numeric values, and sequences
 where possible. Do not infer, explain, summarize sequences, change
 numbers, drop intermediate values, or add facts.
@@ -106,6 +108,8 @@ If MEDICATION is provided in PATIENT DATA, mention all listed medications near t
 Do not mention medications if MEDICATION is not provided in PATIENT DATA.
 If ADVICE is provided in PATIENT DATA, mention all doctor advice near the end, preserving their dates exactly, e.g. "doctor advice includes [advice with dates]".
 Do not mention doctor advice if ADVICE is not provided in PATIENT DATA.
+If PENDING TESTS is provided in PATIENT DATA, mention all pending tests near the end, preserving their dates exactly, e.g. "pending tests include [pending tests with dates]".
+Do not mention pending tests if PENDING TESTS is not provided in PATIENT DATA.
 Do not use interpretation words such as indicating, suggests, likely,
 possible, evidence of, reflecting, progressive, significant, declined,
 increased, decreased, or history of unless the exact word appears in

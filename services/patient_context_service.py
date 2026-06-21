@@ -224,6 +224,22 @@ class PatientContextService:
         all_advice = "; ".join(advice_strings)
 
         # --------------------
+        # Find Pending Tests
+        # --------------------
+        pending_set = set()
+        for t in tests:
+            res = getattr(t, "testResult", None)
+            if res is None or not str(res).strip():
+                pending_set.add((t.testDate, t.testName))
+
+        pending_tests = sorted(list(pending_set), key=lambda x: x[0])
+        pending_strings = []
+        for dt, name in pending_tests:
+            dt_str = dt.strftime("%d-%m-%Y")
+            pending_strings.append(f"{name} on {dt_str}")
+        all_pending = "; ".join(pending_strings)
+
+        # --------------------
         # Build Structured Context
         # --------------------
 
@@ -235,7 +251,8 @@ class PatientContextService:
                 patient,
                 facts,
                 latest_medicine=all_medications,
-                latest_advice=all_advice
+                latest_advice=all_advice,
+                pending_tests=all_pending
             )
         )
 

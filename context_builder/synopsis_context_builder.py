@@ -34,6 +34,7 @@ class SynopsisContextBuilder:
 
         medication = context.get("medication", "")
         advice = context.get("advice", "")
+        pending_tests = context.get("pending_tests", "")
 
         patient_name = patient.get(
             "patient_name",
@@ -150,6 +151,12 @@ class SynopsisContextBuilder:
 
             sections.append(
                 f"ADVICE: {advice}"
+            )
+
+        if pending_tests:
+
+            sections.append(
+                f"PENDING TESTS: {pending_tests}"
             )
 
         return "\n\n".join(sections)

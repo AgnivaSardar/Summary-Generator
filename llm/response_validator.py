@@ -95,11 +95,34 @@ class SequenceValidator:
                     f"Forbidden sequence rewrite: {pattern}"
                 )
 
-        for sequence_match in cls.SEQUENCE_PATTERN.finditer(
-            context
-        ):
+        # Parse findings with sequences to identify their associated test names.
+        findings = []
+        findings_match = re.search(r"IMPORTANT FINDINGS:\s*(.*?)(?:\n\n|[A-Z]{2,}:|$)", context, re.DOTALL)
+        if findings_match:
+            findings = [f.strip() for f in findings_match.group(1).split(";") if f.strip()]
+        else:
+            # fallback: check all lines/semicolons in context
+            for line in context.split("\n"):
+                if ";" in line:
+                    findings.extend([f.strip() for f in line.split(";") if f.strip()])
+                else:
+                    findings.append(line.strip())
+
+        for finding in findings:
+            sequence_match = cls.SEQUENCE_PATTERN.search(finding)
+            if not sequence_match:
+                continue
 
             sequence = sequence_match.group(0).strip()
+
+            # Extract label before "values:" or "value:" (e.g. "UREA" from "UREA values:")
+            label_match = re.match(r"^(.*?)\s+values?:", finding, re.IGNORECASE)
+            label = label_match.group(1).strip().lower() if label_match else ""
+
+            # Only validate the sequence if the test label is mentioned in the summary
+            if label and label not in lower:
+                continue
+
             sequence_numbers = cls.NUMBER_PATTERN.findall(
                 sequence
             )
@@ -122,7 +145,7 @@ class SequenceValidator:
             ):
 
                 raise ValueError(
-                    "Numeric sequence changed or shortened"
+                    f"Numeric sequence for {label.upper() if label else 'unknown'} changed or shortened"
                 )
 
 

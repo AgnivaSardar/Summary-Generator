@@ -25,6 +25,8 @@ class Settings(BaseSettings):
 
     LOG_LEVEL: str = "INFO"
 
+    GEMINI_API_KEY: Optional[str] = None
+
     class Config:
 
         env_file = ".env"

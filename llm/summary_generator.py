@@ -36,9 +36,12 @@ class SummaryGenerator:
     MAX_VALIDATION_RETRIES = 2
 
     def __init__(self):
-        self.ollama = (
-            OllamaClient()
-        )
+        from config.settings import settings
+        if settings.GEMINI_API_KEY and settings.GEMINI_API_KEY.strip():
+            from llm.gemini_client import GeminiClient
+            self.ollama = GeminiClient()
+        else:
+            self.ollama = OllamaClient()
 
     def generate(
         self,

@@ -56,7 +56,7 @@ class OllamaClient:
 
                         "repeat_penalty": 1.05,
 
-                        "num_predict": 450,
+                        "num_predict": 1024,
 
                         "seed": 42
                     }

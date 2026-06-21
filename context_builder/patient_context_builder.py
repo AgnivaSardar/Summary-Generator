@@ -22,7 +22,8 @@ class PatientContextBuilder:
         patient,
         facts,
         latest_medicine="",
-        latest_advice=""
+        latest_advice="",
+        pending_tests=""
     ):
 
         active_problems = (
@@ -78,5 +79,8 @@ class PatientContextBuilder:
             latest_medicine,
 
             "advice":
-            latest_advice
+            latest_advice,
+
+            "pending_tests":
+            pending_tests
         }
