@@ -1,3 +1,11 @@
+import sys
+import io
+
+# Reconfigure stdout/stderr to UTF-8 on Windows to handle unicode characters like → without crashing
+if sys.platform.startswith('win'):
+    sys.stdout.reconfigure(encoding='utf-8', line_buffering=True)
+    sys.stderr.reconfigure(encoding='utf-8', line_buffering=True)
+
 from fastapi import FastAPI
 
 from api.summary_routes import (

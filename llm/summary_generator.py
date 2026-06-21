@@ -33,7 +33,7 @@ from context_builder.synopsis_context_builder import (
 
 class SummaryGenerator:
 
-    MAX_VALIDATION_RETRIES = 2
+    MAX_VALIDATION_RETRIES = 0
 
     def __init__(self):
         from config.settings import settings

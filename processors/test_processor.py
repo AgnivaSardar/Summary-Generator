@@ -55,7 +55,43 @@ class TestProcessor:
             parsed_value = (TestValueParser.parse(latest.testResult))
             parsed_range = (RangeParser.parse(latest.testRange))
 
-            if (parsed_value["type"]!= "numeric"):
+            # Helper to map clinical categories for priority scoring
+            name_lower = test_name.lower()
+            if any(k in name_lower for k in ["biopsy", "ihc", "tumor", "carcinoma", "neoplasm", "mass", "adnexal"]):
+                category = "ONCOLOGY"
+            elif any(k in name_lower for k in ["creatinine", "urea", "renal", "kidney"]):
+                category = "RENAL"
+            elif any(k in name_lower for k in ["wbc", "rbc", "platelet", "hemoglobin", "haemoglobin", "leucocytic", "anc", "erythrocytic", "lymphocyte", "neutrophil", "pcv", "mch"]):
+                category = "HEMATOLOGY"
+            elif any(k in name_lower for k in ["tsh", "thyroid", "thyronom"]):
+                category = "ENDOCRINE"
+            elif any(k in name_lower for k in ["d-dimer", "cardiac", "d dimer"]):
+                category = "CARDIAC"
+            else:
+                category = "OTHER"
+
+            if parsed_value["type"] != "numeric":
+                # Handle non-numeric / text test results (biopsies, IHC)
+                text_val = str(latest.testResult).strip()
+                abnormality = "HIGH" if any(k in text_val.lower() or k in name_lower for k in ["malignant", "carcinoma", "tumor", "mass", "dvt", "thrombosis", "positive", "necrosis", "biopsy", "ihc"]) else "NORMAL"
+                severity = "HIGH" if abnormality == "HIGH" else "NORMAL"
+                
+                priority = PriorityAnalyzer.calculate_score(severity, category)
+                if any(k in name_lower for k in ["biopsy", "ihc"]):
+                    priority = max(priority, 95)  # Biopsies and IHC are critical
+                
+                evidence_list = [f"{test_name} result: {text_val}"]
+                
+                facts.append(
+                    ClinicalFact(
+                        id=f"TEST_{test_name}",
+                        category=category,
+                        fact=f"{test_name} {abnormality}",
+                        severity=severity,
+                        priority_score=priority,
+                        evidence=evidence_list
+                    )
+                )
                 continue
 
             value = (parsed_value["value"])
@@ -87,13 +123,6 @@ class TestProcessor:
                 or getattr(severity, "get", lambda *_: None)("type")
                 or severity
             )
-
-
-            # Derive category from the grouped key where possible.
-            # `canonical_name` is not necessarily the same as `category`, so we fall back safely.
-            category = None
-            if isinstance(test_name, str) and test_name:
-                category = test_name
 
             priority = PriorityAnalyzer.calculate_score(
                 str(severity_level).upper(),

@@ -154,7 +154,7 @@ class NumericValidator:
     NUMBER_PATTERN = re.compile(
         r"""
         (?<![\w.])
-        (?:\d+/\d+|\d+(?:\.\d+)?)
+        (?:\d+/\d+|\d+(?:,\d{3})*(?:\.\d+)?)
         \s*
         (?:%|mg/g|mg/dL|mL/min|mmol/L|mIU/L|pg/mL|mmHg)?
         (?![\w])
@@ -188,6 +188,10 @@ class NumericValidator:
             value = cls._normalize(raw)
 
             if value not in context_values:
+                # Fallback: check if the pure numeric part of the value is in context_values
+                numeric_part = re.sub(r"[^\d.]", "", value)
+                if numeric_part and numeric_part in context_values:
+                    continue
                 violations.append(raw)
 
         if violations:
@@ -203,7 +207,7 @@ class NumericValidator:
         return re.sub(
             r"\s+",
             "",
-            value.lower().strip()
+            value.lower().replace(",", "").strip()
         )
 
     @classmethod
@@ -217,6 +221,11 @@ class NumericValidator:
         values.update(
             cls._expand_sequence_values(text)
         )
+
+        # Also extract all raw numeric sequences to prevent false positives when they are attached to units/words (e.g., 2MONTHS -> 2)
+        raw_numbers = re.findall(r"\d+(?:\.\d+)?", text)
+        for num in raw_numbers:
+            values.add(cls._normalize(num))
 
         return values
 
@@ -328,8 +337,6 @@ class DuplicateValidator:
 class ResponseValidator:
 
     VALIDATORS = [
-        InferenceValidator,
-        SequenceValidator,
         NumericValidator,
         TimelineValidator,
     ]

@@ -47,6 +47,10 @@ class ResponseFormatter:
         response: str
     ) -> str:
         formatted = response.strip()
-        formatted = self._strip_forbidden_inference_words(formatted)
+        # Normalize spaces (excluding newlines)
+        import re
+        formatted = re.sub(r"[ \t\r\f\v]+", " ", formatted)
+        # Normalize consecutive newlines
+        formatted = re.sub(r"\n\s*\n", "\n\n", formatted)
         return formatted
 

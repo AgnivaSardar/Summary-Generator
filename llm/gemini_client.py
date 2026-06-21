@@ -10,12 +10,12 @@ class GeminiClient:
 
     def generate(self, prompt: str) -> str:
         print("\n===== GEMINI REQUEST =====")
-        print("Model: gemini-flash-latest")
+        print(f"Model: {settings.GEMINI_MODEL}")
         print(f"Prompt Size: {len(prompt)} chars")
 
         start_time = time.time()
         try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={self.api_key}"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.GEMINI_MODEL}:generateContent?key={self.api_key}"
             headers = {"Content-Type": "application/json"}
             payload = {
                 "contents": [
@@ -33,7 +33,7 @@ class GeminiClient:
                 }
             }
 
-            response = requests.post(url, json=payload, headers=headers, timeout=30)
+            response = requests.post(url, json=payload, headers=headers, timeout=60)
             response.raise_for_status()
 
             elapsed = time.time() - start_time

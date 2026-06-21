@@ -27,6 +27,8 @@ class Settings(BaseSettings):
 
     GEMINI_API_KEY: Optional[str] = None
 
+    GEMINI_MODEL: str = "gemini-3.1-flash-lite"
+
     class Config:
 
         env_file = ".env"

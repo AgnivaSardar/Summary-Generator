@@ -62,7 +62,7 @@ class AppointmentProcessor:
                         "LOW",
 
                         priority_score=
-                        20,
+                        80,
 
                         evidence=[
                             TextCleaner.clean(appointment.chiefComplaints)
@@ -93,7 +93,7 @@ class AppointmentProcessor:
                         "LOW",
 
                         priority_score=
-                        15,
+                        75,
 
                         evidence=[
                             TextCleaner.clean(appointment.onExamination)
@@ -127,7 +127,7 @@ class AppointmentProcessor:
                         "MODERATE",
 
                         priority_score=
-                        50,
+                        90,
 
                         evidence=[
                             TextCleaner.clean(appointment.diagnosis)

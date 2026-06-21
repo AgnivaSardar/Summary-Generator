@@ -57,7 +57,7 @@ class AdmissionProcessor:
                         "HIGH",
 
                         priority_score=
-                        70,
+                        90,
 
                         evidence=[
                             TextCleaner.clean(admission.diagnosis)
@@ -88,7 +88,7 @@ class AdmissionProcessor:
                         "MODERATE",
 
                         priority_score=
-                        45,
+                        80,
 
                         evidence=[
                             TextCleaner.clean(admission.desieseDescription)
@@ -119,7 +119,7 @@ class AdmissionProcessor:
                         "LOW",
 
                         priority_score=
-                        15,
+                        75,
 
                         evidence=[
                             TextCleaner.clean(admission.onExamination)
@@ -153,7 +153,7 @@ class AdmissionProcessor:
                         "LOW",
 
                         priority_score=
-                        30,
+                        90,
 
                         evidence=[
                             TextCleaner.clean(admission.pastHistory)
@@ -187,7 +187,7 @@ class AdmissionProcessor:
                         "LOW",
 
                         priority_score=
-                        25,
+                        95,
 
                         evidence=[
                             TextCleaner.clean(admission.courseInHospital)
